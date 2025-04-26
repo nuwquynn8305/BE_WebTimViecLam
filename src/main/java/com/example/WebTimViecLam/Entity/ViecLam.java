@@ -17,6 +17,7 @@ public class ViecLam {
     private String muc_luong;
     @Column(name = "mo_ta", columnDefinition = "LONGTEXT")
     private String mo_ta;
+    @Column(name = "yeu_cau_cong_viec", columnDefinition = "LONGTEXT")
     private String yeu_cau_cong_viec;
     private Integer so_luong_tuyen;
     private String dia_chi;
@@ -30,4 +31,7 @@ public class ViecLam {
     @ManyToOne
     @JoinColumn(name = "ma_doanh_nghiep", referencedColumnName = "ma_doanh_nghiep")
     private DoanhNghiep doanhNghiep;
+    @ManyToOne
+    @JoinColumn(name = "ma_linh_vuc", referencedColumnName = "ma_linh_vuc")
+    private LinhVuc linhVuc;
 }

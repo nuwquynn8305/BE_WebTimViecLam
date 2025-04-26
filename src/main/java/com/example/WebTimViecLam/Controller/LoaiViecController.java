@@ -11,6 +11,7 @@ import com.example.WebTimViecLam.Service.LoaiViecService;
 
 @RestController
 @RequestMapping("/api/loaiviec")
+@CrossOrigin
 public class LoaiViecController {
 
     @Autowired

@@ -12,6 +12,7 @@ import com.example.WebTimViecLam.Service.UngTuyenService;
 
 @RestController
 @RequestMapping("/api/ungtuyen")
+@CrossOrigin
 public class UngTuyenController {
 
     @Autowired

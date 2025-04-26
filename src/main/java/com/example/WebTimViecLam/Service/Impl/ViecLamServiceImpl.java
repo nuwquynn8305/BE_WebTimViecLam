@@ -11,9 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.WebTimViecLam.Entity.ViecLam;
 import com.example.WebTimViecLam.Entity.LoaiViec;
 import com.example.WebTimViecLam.Entity.DoanhNghiep;
+import com.example.WebTimViecLam.Entity.LinhVuc;
 import com.example.WebTimViecLam.Repository.ViecLamRepository;
 import com.example.WebTimViecLam.Repository.LoaiViecRepository;
 import com.example.WebTimViecLam.Repository.DoanhNghiepRepository;
+import com.example.WebTimViecLam.Repository.LinhVucRepository;
 import com.example.WebTimViecLam.Service.ViecLamService;
 
 @Service
@@ -29,6 +31,9 @@ public class ViecLamServiceImpl implements ViecLamService {
     private DoanhNghiepRepository doanhNghiepRepository;
 
     @Autowired
+    private LinhVucRepository linhVucRepository;
+
+    @Autowired
     private CloudinaryService cloudinaryService;
 
     @Override
@@ -38,60 +43,62 @@ public class ViecLamServiceImpl implements ViecLamService {
 
     @Override
     public ViecLam getById(Integer id) {
-        Optional<ViecLam> opt = viecLamRepository.findById(id);
-        if(opt.isPresent()){
-            return opt.get();
-        }
-        throw new RuntimeException("Không tìm thấy việc làm với id: " + id);
+        return viecLamRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy việc làm với id: " + id));
     }
 
     @Override
-    public ViecLam save(ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, MultipartFile file) throws IOException {
-        // Lấy đối tượng LoaiViec và DoanhNghiep từ database
+    public ViecLam save(ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, Integer ma_linh_vuc, MultipartFile file) throws IOException {
+        // Gán quan hệ
         LoaiViec loaiViec = loaiViecRepository.findById(ma_loai_viec)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy loại việc với id: " + ma_loai_viec));
         DoanhNghiep doanhNghiep = doanhNghiepRepository.findById(ma_doanh_nghiep)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy doanh nghiệp với id: " + ma_doanh_nghiep));
+        LinhVuc linhVuc = linhVucRepository.findById(ma_linh_vuc)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lĩnh vực với id: " + ma_linh_vuc));
 
-        // Gán cho ViecLam
         viecLam.setLoaiViec(loaiViec);
         viecLam.setDoanhNghiep(doanhNghiep);
+        viecLam.setLinhVuc(linhVuc);
 
-        // Nếu có file upload cho avt, upload lên Cloudinary và set URL
+        // Upload ảnh nếu có
         if (file != null && !file.isEmpty()) {
             String avtUrl = cloudinaryService.uploadImage(file);
             viecLam.setAvt(avtUrl);
         }
 
-        // Khi tạo mới, đảm bảo id là null để Hibernate sử dụng persist thay vì merge
-        viecLam.setMa_viec_lam(null);
+        viecLam.setMa_viec_lam(null); // Để Hibernate tự insert
         return viecLamRepository.save(viecLam);
     }
 
     @Override
-    public ViecLam update(Integer id, ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, MultipartFile file) throws IOException {
+    public ViecLam update(Integer id, ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, Integer ma_linh_vuc, MultipartFile file) throws IOException {
         ViecLam exist = getById(id);
 
-        // Cập nhật các trường cơ bản
         exist.setTen_viec_lam(viecLam.getTen_viec_lam());
-        // Nếu có file mới, thực hiện upload và cập nhật avt, nếu không giữ nguyên giá trị cũ
-        if (file != null && !file.isEmpty()) {
-            String avtUrl = cloudinaryService.uploadImage(file);
-            exist.setAvt(avtUrl);
-        }
         exist.setMuc_luong(viecLam.getMuc_luong());
         exist.setMo_ta(viecLam.getMo_ta());
         exist.setYeu_cau_cong_viec(viecLam.getYeu_cau_cong_viec());
         exist.setSo_luong_tuyen(viecLam.getSo_luong_tuyen());
         exist.setDia_chi(viecLam.getDia_chi());
 
-        // Cập nhật lại quan hệ nếu có thay đổi
+        // Nếu có file mới thì cập nhật avt
+        if (file != null && !file.isEmpty()) {
+            String avtUrl = cloudinaryService.uploadImage(file);
+            exist.setAvt(avtUrl);
+        }
+
+        // Cập nhật quan hệ
         LoaiViec loaiViec = loaiViecRepository.findById(ma_loai_viec)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy loại việc với id: " + ma_loai_viec));
         DoanhNghiep doanhNghiep = doanhNghiepRepository.findById(ma_doanh_nghiep)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy doanh nghiệp với id: " + ma_doanh_nghiep));
+        LinhVuc linhVuc = linhVucRepository.findById(ma_linh_vuc)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lĩnh vực với id: " + ma_linh_vuc));
+
         exist.setLoaiViec(loaiViec);
         exist.setDoanhNghiep(doanhNghiep);
+        exist.setLinhVuc(linhVuc);
 
         return viecLamRepository.save(exist);
     }
@@ -99,5 +106,15 @@ public class ViecLamServiceImpl implements ViecLamService {
     @Override
     public void delete(Integer id) {
         viecLamRepository.deleteById(id);
+    }
+
+    @Override
+    public List<ViecLam> getByCompanyId(Integer maDoanhNghiep) {
+        return viecLamRepository.findAllByDoanhNghiepMaDoanhNghiep(maDoanhNghiep);
+    }
+
+    @Override
+    public List<ViecLam> searchJobs(String keyword, String location, List<String> jobType) {
+        return viecLamRepository.searchJobs(keyword, location, jobType);
     }
 }

@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vieclam")
+@CrossOrigin
 public class ViecLamController {
 
     @Autowired
@@ -41,6 +44,7 @@ public class ViecLamController {
             @RequestParam("dia_chi") String diaChi,
             @RequestParam("ma_loai_viec") Integer maLoaiViec,
             @RequestParam("ma_doanh_nghiep") Integer maDoanhNghiep,
+            @RequestParam("ma_linh_vuc") Integer maLinhVuc,
             @RequestParam(value = "avt", required = false) MultipartFile avtFile
     ) throws IOException {
 
@@ -52,7 +56,7 @@ public class ViecLamController {
         viecLam.setSo_luong_tuyen(soLuong);
         viecLam.setDia_chi(diaChi);
 
-        ViecLam created = viecLamService.save(viecLam, maLoaiViec, maDoanhNghiep, avtFile);
+        ViecLam created = viecLamService.save(viecLam, maLoaiViec, maDoanhNghiep, maLinhVuc, avtFile);
         return ResponseEntity.ok(created);
     }
 
@@ -68,6 +72,7 @@ public class ViecLamController {
             @RequestParam("dia_chi") String diaChi,
             @RequestParam("ma_loai_viec") Integer maLoaiViec,
             @RequestParam("ma_doanh_nghiep") Integer maDoanhNghiep,
+            @RequestParam("ma_linh_vuc") Integer maLinhVuc,
             @RequestParam(value = "avt", required = false) MultipartFile avtFile
     ) throws IOException {
 
@@ -79,7 +84,7 @@ public class ViecLamController {
         viecLam.setSo_luong_tuyen(soLuong);
         viecLam.setDia_chi(diaChi);
 
-        ViecLam updated = viecLamService.update(id, viecLam, maLoaiViec, maDoanhNghiep, avtFile);
+        ViecLam updated = viecLamService.update(id, viecLam, maLoaiViec, maDoanhNghiep, maLinhVuc, avtFile);
         return ResponseEntity.ok(updated);
     }
 
@@ -88,5 +93,35 @@ public class ViecLamController {
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         viecLamService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Lấy việc làm theo doanh nghiệp
+    @GetMapping("/doanhnghiep/{maDoanhNghiep}")
+    public ResponseEntity<List<ViecLam>> getByCompanyId(@PathVariable Integer maDoanhNghiep) {
+        List<ViecLam> viecLamList = viecLamService.getByCompanyId(maDoanhNghiep);
+        return ResponseEntity.ok(viecLamList);
+    }
+
+    // Tìm kiếm việc làm
+    @GetMapping("/search")
+    public ResponseEntity<List<ViecLam>> searchJobs(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "location", required = false) String location,
+            @RequestParam(value = "jobType", required = false) String jobType) {
+
+        List<String> jobTypes = null;
+        if (jobType != null && !jobType.isEmpty()) {
+            jobTypes = Arrays.stream(jobType.split(","))
+                    .map(String::trim)
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toList());
+        }
+
+        List<ViecLam> results = viecLamService.searchJobs(
+                keyword != null ? keyword : "",
+                location != null ? location : "",
+                jobTypes
+        );
+        return ResponseEntity.ok(results);
     }
 }

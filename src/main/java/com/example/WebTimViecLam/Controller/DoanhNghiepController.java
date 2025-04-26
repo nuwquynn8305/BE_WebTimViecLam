@@ -11,6 +11,7 @@ import com.example.WebTimViecLam.Service.DoanhNghiepService;
 
 @RestController
 @RequestMapping("/api/doanhnghiep")
+@CrossOrigin
 public class DoanhNghiepController {
 
     @Autowired

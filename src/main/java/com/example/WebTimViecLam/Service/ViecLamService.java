@@ -9,9 +9,9 @@ import com.example.WebTimViecLam.Entity.ViecLam;
 public interface ViecLamService {
     List<ViecLam> getAll();
     ViecLam getById(Integer id);
-    // Phương thức save với upload file (avt)
-    ViecLam save(ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, MultipartFile file) throws IOException;
-    // Phương thức update với upload file (avt)
-    ViecLam update(Integer id, ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, MultipartFile file) throws IOException;
+    ViecLam save(ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, Integer ma_linh_vuc, MultipartFile file) throws IOException;
+    ViecLam update(Integer id, ViecLam viecLam, Integer ma_loai_viec, Integer ma_doanh_nghiep, Integer ma_linh_vuc, MultipartFile file) throws IOException;
     void delete(Integer id);
+    List<ViecLam> getByCompanyId(Integer maDoanhNghiep);
+    List<ViecLam> searchJobs(String keyword, String location, List<String> jobType);
 }
