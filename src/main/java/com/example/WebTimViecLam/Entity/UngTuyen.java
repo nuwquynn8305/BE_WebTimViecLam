@@ -1,13 +1,9 @@
 package com.example.WebTimViecLam.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -24,7 +20,11 @@ public class UngTuyen {
     private String ghi_chu;
     private String tep_dinh_kem;
     private String status;
+    @Column(name = "createAt")
+    private LocalDateTime createAt;
 
+    @Column(name = "updateAt")
+    private LocalDateTime updateAt;
     // Ánh xạ quan hệ với ViecLam (một ứng tuyển thuộc 1 việc làm)
     @ManyToOne
     @JoinColumn(name = "ma_viec_lam", referencedColumnName = "ma_viec_lam")

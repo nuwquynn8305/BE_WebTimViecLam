@@ -1,7 +1,9 @@
 package com.example.WebTimViecLam.Service.Impl;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.example.WebTimViecLam.Utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,8 @@ public class UngTuyenServiceImpl implements UngTuyenService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     public List<UngTuyen> getAll() {
@@ -37,13 +41,13 @@ public class UngTuyenServiceImpl implements UngTuyenService {
     }
 
     @Override
-    public UngTuyen save(UngTuyen ungTuyen, Integer ma_viec_lam, String user_id) {
+    public UngTuyen save(UngTuyen ungTuyen, Integer ma_viec_lam, String email) {
         // Lấy đối tượng ViecLam từ database
         ViecLam viecLam = viecLamRepository.findById(ma_viec_lam)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy việc làm với id: " + ma_viec_lam));
         // Lấy đối tượng User từ database
-        User user = userRepository.findById(user_id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với id: " + user_id));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
         // Ánh xạ các đối tượng cho ứng tuyển
         ungTuyen.setViecLam(viecLam);
         ungTuyen.setUser(user);
@@ -78,5 +82,31 @@ public class UngTuyenServiceImpl implements UngTuyenService {
     @Override
     public void delete(Integer id) {
         ungTuyenRepository.deleteById(id);
+    }
+
+    @Override
+    public List<UngTuyen> getByToken(String token) {
+        Optional<User> userOpt = userRepository.findByEmail(jwtUtil.extractEmail(token));
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return ungTuyenRepository.findByUserId(user.getId());
+        }else{
+            return null;
+        }
+    }
+    @Override
+    public List<UngTuyen> getByViecLamId(Integer ma_viec_lam) {
+        return ungTuyenRepository.findAllByViecLamMaViecLam(ma_viec_lam);
+    }
+    @Override
+    public UngTuyen updateStatus(Integer id, String status) {
+        // Gọi repository cập nhật status
+        int updated = ungTuyenRepository.updateStatus(id, status);
+        if (updated == 0) {
+            throw new RuntimeException("Không tìm thấy ứng tuyển với id: " + id);
+        }
+        // Lấy lại đối tượng sau khi update
+        Optional<UngTuyen> updatedObj = ungTuyenRepository.findById(id);
+        return updatedObj.orElseThrow(() -> new RuntimeException("Lỗi khi lấy lại thông tin sau khi cập nhật"));
     }
 }

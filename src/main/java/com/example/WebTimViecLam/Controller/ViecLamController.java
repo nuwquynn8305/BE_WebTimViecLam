@@ -4,11 +4,13 @@ import com.example.WebTimViecLam.Entity.ViecLam;
 import com.example.WebTimViecLam.Service.ViecLamService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +27,10 @@ public class ViecLamController {
     @GetMapping
     public ResponseEntity<List<ViecLam>> getAll() {
         return ResponseEntity.ok(viecLamService.getAll());
+    }
+    @GetMapping("/admin")
+    public ResponseEntity<List<ViecLam>> getAllAdmin() {
+        return ResponseEntity.ok(viecLamService.getAllAdmin());
     }
 
     // Lấy việc làm theo id
@@ -70,9 +76,8 @@ public class ViecLamController {
             @RequestParam("yeu_cau_cong_viec") String yeuCau,
             @RequestParam("so_luong_tuyen") Integer soLuong,
             @RequestParam("dia_chi") String diaChi,
-            @RequestParam("ma_loai_viec") Integer maLoaiViec,
-            @RequestParam("ma_doanh_nghiep") Integer maDoanhNghiep,
-            @RequestParam("ma_linh_vuc") Integer maLinhVuc,
+            @RequestParam(value = "ma_loai_viec", required = false) Integer maLoaiViec, // required = false
+            @RequestParam(value = "ma_linh_vuc", required = false) Integer maLinhVuc, // required = false
             @RequestParam(value = "avt", required = false) MultipartFile avtFile
     ) throws IOException {
 
@@ -83,10 +88,15 @@ public class ViecLamController {
         viecLam.setYeu_cau_cong_viec(yeuCau);
         viecLam.setSo_luong_tuyen(soLuong);
         viecLam.setDia_chi(diaChi);
+        viecLam.setCreatedAt(LocalDateTime.now());
 
-        ViecLam updated = viecLamService.update(id, viecLam, maLoaiViec, maDoanhNghiep, maLinhVuc, avtFile);
+
+
+        // Gọi service để cập nhật
+        ViecLam updated = viecLamService.update(id, viecLam, maLoaiViec, maLinhVuc, avtFile);
         return ResponseEntity.ok(updated);
     }
+
 
     // Xóa việc làm
     @DeleteMapping("/{id}")
@@ -107,7 +117,8 @@ public class ViecLamController {
     public ResponseEntity<List<ViecLam>> searchJobs(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "location", required = false) String location,
-            @RequestParam(value = "jobType", required = false) String jobType) {
+            @RequestParam(value = "jobType", required = false) String jobType,
+            @RequestParam(value = "category", required = false) String category) {
 
         List<String> jobTypes = null;
         if (jobType != null && !jobType.isEmpty()) {
@@ -117,11 +128,45 @@ public class ViecLamController {
                     .collect(Collectors.toList());
         }
 
+        // Nếu category được truyền, chuyển về lowercase nếu cần xử lý (tuỳ thuộc vào yêu cầu nghiệp vụ)
+        String categoryParam = category != null ? category.toLowerCase() : null;
+
         List<ViecLam> results = viecLamService.searchJobs(
                 keyword != null ? keyword : "",
                 location != null ? location : "",
-                jobTypes
+                jobTypes,
+                categoryParam
         );
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/{maViecLam}/check-applied")
+    public boolean checkUserApplied(
+            @PathVariable Integer maViecLam,
+            @RequestParam String token) {
+
+        // Lấy thông tin từ URL
+        String jwtToken = token;
+
+        return viecLamService.checkUserApplied(maViecLam, jwtToken);
+    }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable("id") Integer id,
+                                          @RequestParam("status") String status) {
+        try {
+            // Kiểm tra giá trị status hợp lệ hay không
+            if (status == null || status.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Vui lòng cung cấp giá trị status hợp lệ");
+            }
+
+            // Gọi service cập nhật trạng thái
+            ViecLam updatedViecLam = viecLamService.updateStatus(id, status);
+
+            // Trả về kết quả đã cập nhật
+            return ResponseEntity.ok(updatedViecLam);
+        } catch (RuntimeException ex) {
+            // Nếu không tìm thấy việc làm hoặc có lỗi thì trả về NOT FOUND với thông báo lỗi
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 }

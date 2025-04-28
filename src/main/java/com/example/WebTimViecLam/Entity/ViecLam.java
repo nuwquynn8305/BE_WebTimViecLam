@@ -3,6 +3,8 @@ package com.example.WebTimViecLam.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Table(name = "vieclam")
@@ -21,7 +23,9 @@ public class ViecLam {
     private String yeu_cau_cong_viec;
     private Integer so_luong_tuyen;
     private String dia_chi;
-
+    private String status;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
     // Thiết lập quan hệ với bảng loaiviec
     @ManyToOne
     @JoinColumn(name = "ma_loai_viec", referencedColumnName = "ma_loai_viec")

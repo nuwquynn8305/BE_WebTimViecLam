@@ -1,13 +1,16 @@
 package com.example.WebTimViecLam.Controller;
 
+import java.io.IOException;
 import java.util.List;
 
+import com.example.WebTimViecLam.Service.Impl.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.WebTimViecLam.Entity.DoanhNghiep;
 import com.example.WebTimViecLam.Service.DoanhNghiepService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/doanhnghiep")
@@ -16,7 +19,8 @@ public class DoanhNghiepController {
 
     @Autowired
     private DoanhNghiepService doanhNghiepService;
-
+    @Autowired
+    private CloudinaryService cloudinaryService;
     // Lấy danh sách tất cả doanh nghiệp
     @GetMapping
     public ResponseEntity<List<DoanhNghiep>> getAll() {
@@ -39,11 +43,35 @@ public class DoanhNghiepController {
     }
 
     // Cập nhật doanh nghiệp theo id
-    @PutMapping("/{id}")
-    public ResponseEntity<DoanhNghiep> update(@PathVariable Integer id, @RequestBody DoanhNghiep doanhNghiep) {
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<DoanhNghiep> update(
+            @PathVariable Integer id,
+            @RequestParam("ten_doanh_nghiep") String tenDoanhNghiep,
+            @RequestParam("tinh") String tinh,
+            @RequestParam("dia_chi") String diaChi,
+            @RequestParam("website") String website,
+            @RequestParam("quy_mo_nhan_su") String quyMoNhanSu,
+            @RequestParam(value = "avt", required = false) MultipartFile avtFile,  // Nhận ảnh từ MultipartFile
+            @RequestParam("gioi_thieu") String gioiThieu
+    ) throws IOException {
+        DoanhNghiep doanhNghiep = new DoanhNghiep();
+        doanhNghiep.setTen_doanh_nghiep(tenDoanhNghiep);
+        doanhNghiep.setTinh(tinh);
+        doanhNghiep.setDia_chi(diaChi);
+        doanhNghiep.setWebsite(website);
+        doanhNghiep.setQuy_mo_nhan_su(quyMoNhanSu);
+        doanhNghiep.setGioi_thieu(gioiThieu);
+
+        // Nếu có file ảnh, tiến hành upload
+        if (avtFile != null && !avtFile.isEmpty()) {
+            String avtUrl = cloudinaryService.uploadImage(avtFile);
+            doanhNghiep.setAvt(avtUrl);
+        }
+
         DoanhNghiep updated = doanhNghiepService.update(id, doanhNghiep);
         return ResponseEntity.ok(updated);
     }
+
 
     // Xóa doanh nghiệp theo id
     @DeleteMapping("/{id}")

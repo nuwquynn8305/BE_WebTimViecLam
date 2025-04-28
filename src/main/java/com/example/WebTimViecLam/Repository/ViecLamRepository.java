@@ -18,13 +18,18 @@ public interface ViecLamRepository extends JpaRepository<ViecLam, Integer> {
             "(LOWER(v.ten_viec_lam) LIKE CONCAT('%', LOWER(:keyword), '%') " +
             "OR LOWER(v.mo_ta) LIKE CONCAT('%', LOWER(:keyword), '%')) " +
             "AND LOWER(v.dia_chi) LIKE CONCAT('%', LOWER(:location), '%') " +
-            "AND (:jobTypes IS NULL OR LOWER(v.loaiViec.ten_loai_viec) IN :jobTypes)")
+            "AND (:jobTypes IS NULL OR LOWER(v.loaiViec.ten_loai_viec) IN :jobTypes) " +
+            "AND (:category IS NULL OR v.loaiViec.ma_loai_viec = :category)")
     List<ViecLam> searchJobs(
             @Param("keyword") String keyword,
             @Param("location") String location,
-            @Param("jobTypes") List<String> jobTypes
+            @Param("jobTypes") List<String> jobTypes,
+            @Param("category") String category
     );
+
     @Query("SELECT COUNT(v) FROM ViecLam v WHERE v.linhVuc.ma_linh_vuc = :maLinhVuc")
     Long countByMaLinhVuc(@Param("maLinhVuc") Integer maLinhVuc);
+
+    List<ViecLam> findByStatus(String status);
 
 }

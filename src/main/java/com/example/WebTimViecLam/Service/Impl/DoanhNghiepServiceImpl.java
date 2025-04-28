@@ -16,6 +16,7 @@ public class DoanhNghiepServiceImpl implements DoanhNghiepService {
     @Autowired
     private DoanhNghiepRepository doanhNghiepRepository;
 
+
     @Override
     public List<DoanhNghiep> getAll() {
         return doanhNghiepRepository.findAll();
@@ -46,9 +47,10 @@ public class DoanhNghiepServiceImpl implements DoanhNghiepService {
         exist.setDia_chi(doanhNghiep.getDia_chi());
         exist.setWebsite(doanhNghiep.getWebsite());
         exist.setQuy_mo_nhan_su(doanhNghiep.getQuy_mo_nhan_su());
-        exist.setAvt(doanhNghiep.getAvt());
+        if (doanhNghiep.getAvt() != null && !doanhNghiep.getAvt().isEmpty()) {
+            exist.setAvt(doanhNghiep.getAvt());
+        }
         exist.setGioi_thieu(doanhNghiep.getGioi_thieu());
-        exist.setUser_id(doanhNghiep.getUser_id());
         return doanhNghiepRepository.save(exist);
     }
 
