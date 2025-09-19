@@ -3,9 +3,11 @@ import com.example.WebTimViecLam.Entity.DoanhNghiep;
 import com.example.WebTimViecLam.Entity.User;
 import com.example.WebTimViecLam.Reponse.AuthDoanhNghiep;
 import com.example.WebTimViecLam.Reponse.AuthResponse;
+import com.example.WebTimViecLam.Reponse.RegisterCompanyRequest;
 import com.example.WebTimViecLam.Repository.DoanhNghiepRepository;
 import com.example.WebTimViecLam.Repository.UserRepository;
 import com.example.WebTimViecLam.Request.AuthRequest;
+import com.example.WebTimViecLam.Service.Impl.AuthCompanyService;
 import com.example.WebTimViecLam.Utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,8 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private  AuthCompanyService authCompanyService;
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user) {
@@ -33,6 +37,12 @@ public class AuthController {
         return ResponseEntity.ok(userRepo.save(user));
     }
 
+
+    @PostMapping("/register-company")
+    public ResponseEntity<?> registerCompany(@RequestBody RegisterCompanyRequest req) {
+        User user = authCompanyService.registerCompany(req);
+        return ResponseEntity.ok(user);
+    }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         User user = userRepo.findByEmail(request.getEmail())

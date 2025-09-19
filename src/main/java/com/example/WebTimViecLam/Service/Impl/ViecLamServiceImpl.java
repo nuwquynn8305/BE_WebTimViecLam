@@ -150,7 +150,7 @@ public class ViecLamServiceImpl implements ViecLamService {
 
         if ("ACTIVE".equals(status)) {
             // Trạng thái chỉ có thể chuyển thành ACTIVE khi hiện tại là CLOSE hoặc ACCEPT
-            if (!"CLOSED".equals(currentStatus) && !"ACCEPT".equals(currentStatus)) {
+            if (!"CLOSED".equals(currentStatus) && !"ACCEPTED".equals(currentStatus)) {
                 throw new RuntimeException("Trạng thái hiện tại không thể chuyển sang ACTIVE");
             }
         } else if ("CLOSED".equals(status)) {
